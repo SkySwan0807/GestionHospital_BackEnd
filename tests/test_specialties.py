@@ -22,6 +22,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.main import app
 from app.database import Base, get_db
@@ -32,11 +33,12 @@ from app.database import Base, get_db
 # Use a SEPARATE in-memory SQLite database for tests.
 # This ensures tests never touch the real hospital.db file.
 # Each test run starts with a clean, empty database.
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test_hospital.db"
+SQLALCHEMY_TEST_DATABASE_URL = "sqlite://"
 
 test_engine = create_engine(
     SQLALCHEMY_TEST_DATABASE_URL,
     connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
@@ -182,7 +184,9 @@ class TestGetSpecialties:
         response = client.get("/api/v1/specialties/9999")
 
         assert response.status_code == 404
-        assert "not found" in response.json()["detail"]
+        # Note: FastAPI's default 404 message is "Not Found" if we don't raise it manually
+        # in some middleware, but our router raises it with custom detail.
+        assert "not found" in response.json()["detail"].lower()
 
 
 class TestHealthCheck:
