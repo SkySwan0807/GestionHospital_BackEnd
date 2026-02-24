@@ -36,26 +36,20 @@ load_dotenv()
 # ============================================================================
 # STEP 1 — THE ENGINE
 # ============================================================================
-# Read the database URL from the .env file.
-# Default fallback: "sqlite:///./hospital.db"
-#
-# URL anatomy for SQLite:
-#   sqlite://     → dialect+driver (SQLite needs no separate driver)
-#   /             → absolute path separator (3 slashes = relative path)
-#   ./hospital.db → relative to wherever you launch uvicorn from
-#                   (i.e., the project root folder)
+import os
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base
+
+load_dotenv()
+
+
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./hospital.db")
 
 engine = create_engine(
     DATABASE_URL,
-    # WHY connect_args={"check_same_thread": False}?
-    # SQLite was designed for single-threaded use. By default it raises an error
-    # if the same connection is used from a different thread than the one that
-    # created it. FastAPI, however, runs request handlers in a thread pool.
-    # Setting check_same_thread=False tells SQLite: "I'll manage thread safety
-    # myself (via scoped sessions), so you don't need to enforce this."
-    # This argument is ONLY needed for SQLite. PostgreSQL/MySQL don't need it.
-    connect_args={"check_same_thread": False},
+    connect_args={"check_same_thread": False}
 )
 
 # ============================================================================
