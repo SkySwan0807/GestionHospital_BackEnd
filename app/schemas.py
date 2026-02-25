@@ -15,7 +15,11 @@ For Story 1, we define three schemas:
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional
 from datetime import datetime
+from app.schemas import SpecialtyOut
 
+from app.schemas import SpecialtyBase
+
+from pydantic import ConfigDict
 
 # ============================================================================
 # 1. THE FOUNDATION
@@ -102,3 +106,34 @@ class SpecialtyOut(SpecialtyBase):
     # "Oh, it's an object? I'll look for obj.id and obj.name instead of obj['id']"
     # ------------------------------------------------------------------
     model_config = ConfigDict(from_attributes=True)
+
+# =====================================================================
+# STAFF SCHEMAS
+# =====================================================================
+
+class StaffBase(BaseModel):
+    """
+    Shared fields for Staff input/output.
+    These represent the main contact information and relationships.
+    """
+    first_name: str = Field(..., description="Employee's first name")
+    last_name: str = Field(..., description="Employee's last name")
+    email: str = Field(..., description="Employee's email address")
+    phone_number: Optional[str] = Field(None, description="Employee's phone number")
+    role_level: Optional[str] = Field(None, description="Role level or position")
+    status: Optional[str] = Field(None, description="Current status (e.g., Online/Offline)")
+    department: Optional[str] = Field(None, description="Department name")
+    specialty: Optional[str] = Field(None, description="Specialty name")
+
+
+class StaffOut(StaffBase):
+    """
+    Schema for API responses.
+    Includes database-generated fields like id and created_at.
+    """
+    id: int = Field(..., description="Unique staff ID")
+    created_at: datetime = Field(..., description="Timestamp of record creation")
+
+    # This allows Pydantic to read ORM objects directly
+    model_config = ConfigDict(from_attributes=True)
+
