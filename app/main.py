@@ -19,7 +19,7 @@ Imports from:
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.database import engine, Base
-from app.routers import specialties
+from app.routers import specialties, staff
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -52,6 +52,9 @@ app = FastAPI(
 # becomes `/api/v1/specialties`. This versioning allows us to safely release
 # a `/api/v2/specialties` later without breaking older Front-End clients.
 app.include_router(specialties.router, prefix="/api/v1")
+app.include_router(staff.router, prefix="/api/v1")
+
+
 
 # ============================================================================
 # 4. HEALTH CHECK ENDPOINT
@@ -65,5 +68,5 @@ def health_check():
     return {
         "status": "ok",
         "message": "Hospital Management API is running",
-        "service": "Specialty Catalog"
+        "service": ["Specialty Catalog", "Staff Management"]
     }

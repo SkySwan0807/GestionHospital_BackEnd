@@ -49,7 +49,7 @@ class SpecialtyBase(BaseModel):
 
 
 # ============================================================================
-# 2. THE INPUT CONTRACT
+# 2. THE INPUT CONTRACT (SPECIALTIES)
 # ============================================================================
 class SpecialtyCreate(SpecialtyBase):
     """
@@ -73,7 +73,7 @@ class SpecialtyCreate(SpecialtyBase):
 
 
 # ============================================================================
-# 3. THE OUTPUT CONTRACT
+# 3. THE OUTPUT CONTRACT (SPECIALTIES)
 # ============================================================================
 class SpecialtyOut(SpecialtyBase):
     """
@@ -101,4 +101,33 @@ class SpecialtyOut(SpecialtyBase):
     # With from_attributes=True, Pydantic knows to say:
     # "Oh, it's an object? I'll look for obj.id and obj.name instead of obj['id']"
     # ------------------------------------------------------------------
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ============================================================================
+# 4. SCHEMAS PARA RECURSOS HUMANOS / STAFF (END-27 - Tu código)
+# ============================================================================
+class StaffPositionUpdate(BaseModel):
+    """
+    El 'guardia de seguridad' para cuando RRHH asigna un cargo a un empleado.
+    """
+    department_id: int = Field(description="ID del departamento (ej. 2 para Urgencias)")
+    role_level: str = Field(description="Nivel del cargo (ej. Médico Residente)")
+    specialty_id: Optional[int] = Field(default=None, description="ID de la especialidad (Opcional)")
+
+
+class StaffResponse(BaseModel):
+    """
+    El formato en el que le devolveremos los datos del empleado al Frontend.
+    """
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    role_level: Optional[str] = None
+    department_id: Optional[int] = None
+    specialty_id: Optional[int] = None
+    status: str
+
+    # Permite a Pydantic leer los objetos directos de la base de datos (SQLAlchemy)
     model_config = ConfigDict(from_attributes=True)
