@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from .staff_contact_database import get_db
-
-from .staff_contact_schema import StaffCreate, StaffResponse
-from .staff_contact_service import create_staff, get_staff
+from .staff_contact_schema import StaffCreate, StaffResponse, StaffUpdate
+from .staff_contact_service import create_staff, get_staff, update_staff
 
 router = APIRouter(
     prefix="/api/staff",
@@ -32,3 +31,14 @@ def get_staff_endpoint(
     db: Session = Depends(get_db)
 ):
     return get_staff(db, staff_id)
+
+@router.patch(
+    "/{staff_id}",
+    response_model=StaffResponse
+)
+def update_staff_endpoint(
+    staff_id: int,
+    staff_update: StaffUpdate,
+    db: Session = Depends(get_db)
+):
+    return update_staff(db, staff_id, staff_update)
