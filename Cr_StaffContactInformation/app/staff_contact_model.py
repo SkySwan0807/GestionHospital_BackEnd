@@ -42,6 +42,7 @@ class Staff(Base):
     department_id = Column(Integer, ForeignKey("departments.id", ondelete="RESTRICT"))
     specialty_id = Column(Integer, ForeignKey("specialties.id", ondelete="RESTRICT"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     department = relationship("Department", back_populates="staff_members")
     specialty = relationship("Specialty", back_populates="staff_members")
