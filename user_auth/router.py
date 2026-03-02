@@ -9,6 +9,9 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import User
 from user_auth.security import verify_password
+from user_auth.password_reset_store import store_code, verify_code
+from user_auth.email_service import send_reset_email
+from user_auth.security import hash_password
 
 router = APIRouter(tags=["Authentication"])
 
@@ -45,3 +48,36 @@ def login(email: str, password: str, db: Session = Depends(get_db)):
         "message": "Login successful",
         "role": user.role
     }
+
+@router.post("/forgot_password")
+def forgot_password(email: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        return {"message": "If the email exists, a reset code has been sent"}
+
+    code = store_code(email)
+    send_reset_email(email, code)
+
+    return {"message": "If the email exists, a reset code has been sent"}
+
+
+@router.post("/reset_password")
+def reset_password(
+    email: str,
+    code: str,
+    new_password: str,
+    db: Session = Depends(get_db)
+):
+    if not verify_code(email, code):
+        raise HTTPException(status_code=400, detail="Invalid or expired code")
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid request")
+
+    user.password_hash = hash_password(new_password)
+    db.commit()
+
+    return {"message": "Password updated successfully"}
