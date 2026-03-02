@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr
 from datetime import date, datetime
 from pydantic import ConfigDict
+from typing import Optional
+from pydantic import BaseModel, EmailStr, Field
 
 class StaffCreate(BaseModel):
     first_name: str
@@ -27,4 +28,12 @@ class StaffResponse(BaseModel):
     specialty_id: int
     created_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+class StaffUpdate(BaseModel):
+    first_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    last_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    email: Optional[EmailStr] = None
+    phone_number: Optional[str] = Field(None, min_length=7, max_length=20)
+    status: Optional[str] = None
+    role_level: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True, extra="forbid")
