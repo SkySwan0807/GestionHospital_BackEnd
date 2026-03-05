@@ -4,7 +4,7 @@ router.py
 Single Responsibility: Defines authentication HTTP endpoints.
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import User
@@ -54,12 +54,12 @@ def forgot_password(email: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
 
     if not user:
-        return {"message": "If the email exists, a reset code has been sent"}
+        return {"message": "The email does not exist in our records"}
 
     code = store_code(email)
     send_reset_email(email, code)
 
-    return {"message": "If the email exists, a reset code has been sent"}
+    return {"message": "Code sent to email if it exists in our records"}
 
 
 @router.post("/reset_password")
@@ -69,13 +69,14 @@ def reset_password(
     new_password: str,
     db: Session = Depends(get_db)
 ):
-    if not verify_code(email, code):
-        raise HTTPException(status_code=400, detail="Invalid or expired code")
-
     user = db.query(User).filter(User.email == email).first()
 
     if not user:
-        raise HTTPException(status_code=400, detail="Invalid request")
+        raise HTTPException(status_code=400, detail="Invalid user")
+
+    if not verify_code(email, code):
+        raise HTTPException(status_code=400, detail="Invalid or expired code")
+
 
     user.password_hash = hash_password(new_password)
     db.commit()
