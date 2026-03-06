@@ -32,7 +32,6 @@ def send_reset_email(to_email: str, code: str):
     if not all([EMAIL_HOST, EMAIL_PORT, EMAIL_USERNAME, EMAIL_PASSWORD, EMAIL_FROM]):
         raise RuntimeError("Email configuration is missing in environment variables.")
 
-    # Create email message
     msg = EmailMessage()
     msg["Subject"] = "Password Reset Code"
     msg["From"] = EMAIL_FROM
@@ -57,12 +56,19 @@ Hospital Management System
 """
     )
 
-    # Connect to SMTP server
     try:
         with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
-            server.starttls()  # Secure connection
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
             server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
             server.send_message(msg)
 
+    except smtplib.SMTPAuthenticationError:
+        raise RuntimeError("SMTP Authentication failed. Check email credentials.")
+
+    except smtplib.SMTPException as e:
+        raise RuntimeError(f"SMTP error occurred: {str(e)}")
+
     except Exception as e:
-        raise RuntimeError(f"Failed to send email: {str(e)}")
+        raise RuntimeError(f"Unexpected error sending email: {str(e)}")
