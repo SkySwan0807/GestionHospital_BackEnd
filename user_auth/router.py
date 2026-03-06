@@ -59,7 +59,7 @@ def forgot_password(email: str, db: Session = Depends(get_db)):
     code = store_code(email)
     send_reset_email(email, code)
 
-    return {"message": "Code sent to email if it exists in our records"}
+    return {"message": "Code sent to email if it exists in our records Email: " + email}
 
 
 @router.post("/reset_password")
