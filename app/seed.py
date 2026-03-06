@@ -78,8 +78,11 @@ def seed_data():
         if not staff_1:
             staff_1 = Staff(
                 first_name="Carlos", last_name="Mendoza", email="cmendoza@hospital.com",
-                role_level="Médico Titular", department_id=dept_urgencias.id, specialty_id=spec_cardio.id,
-                status="Activo", start_date=hoy
+                role_level="Attending Physician", department_id=dept_urgencias.id, specialty_id=spec_cardio.id,
+                status="Active", start_date=hoy,
+                # --- NUEVOS CAMPOS ---
+                profile_pic="https://ui-avatars.com/api/?name=Carlos+Mendoza&background=0D8ABC&color=fff",
+                vacation_details={"assigned": 15, "used": 5, "available": 10}
             )
             db.add(staff_1)
             print("  ➕ Creando empleado: Carlos Mendoza")
@@ -90,7 +93,10 @@ def seed_data():
         if not staff_2:
             staff_2 = Staff(
                 first_name="Ana", last_name="Gómez", email="agomez@hospital.com",
-                role_level="Enfermera Jefe", department_id=dept_cirugia.id, status="Activo", start_date=hoy
+                role_level="Head Nurse", department_id=dept_cirugia.id, status="Active", start_date=hoy,
+                # --- NUEVOS CAMPOS ---
+                profile_pic="https://ui-avatars.com/api/?name=Ana+Gomez&background=F56565&color=fff",
+                vacation_details={"assigned": 20, "used": 0, "available": 20}
             )
             db.add(staff_2)
             print("  ➕ Creando empleado: Ana Gómez")
@@ -101,8 +107,11 @@ def seed_data():
         if not staff_3:
             staff_3 = Staff(
                 first_name="Luis", last_name="Pérez", email="lperez@hospital.com",
-                role_level="Médico Residente", department_id=dept_pediatria.id, specialty_id=spec_trauma.id,
-                status="Activo", start_date=hoy
+                role_level="Medical Resident", department_id=dept_pediatria.id, specialty_id=spec_trauma.id,
+                status="Active", start_date=hoy,
+                # --- NUEVOS CAMPOS ---
+                profile_pic="https://ui-avatars.com/api/?name=Luis+Perez&background=ED8936&color=fff",
+                vacation_details={"assigned": 15, "used": 15, "available": 0}
             )
             db.add(staff_3)
             print("  ➕ Creando empleado: Luis Pérez")
@@ -113,7 +122,10 @@ def seed_data():
         if not staff_4:
             staff_4 = Staff(
                 first_name="María", last_name="Rodríguez", email="mrodriguez@hospital.com",
-                role_level="Recepcionista", department_id=dept_urgencias.id, status="Activo", start_date=hoy
+                role_level="Receptionist", department_id=dept_urgencias.id, status="Active", start_date=hoy,
+                # --- NUEVOS CAMPOS ---
+                profile_pic="https://ui-avatars.com/api/?name=Maria+Rodriguez&background=9F7AEA&color=fff",
+                vacation_details={"assigned": 15, "used": 2, "available": 13}
             )
             db.add(staff_4)
             print("  ➕ Creando empleado: María Rodríguez")
@@ -124,8 +136,11 @@ def seed_data():
         if not staff_rrhh:
             staff_rrhh = Staff(
                 first_name="Laura", last_name="Vargas", email="lvargas@hospital.com",
-                role_level="Especialista RRHH", department_id=dept_rrhh.id, specialty_id=None,
-                status="Activo", start_date=hoy
+                role_level="HR Specialist", department_id=dept_rrhh.id, specialty_id=None,
+                status="Active", start_date=hoy,
+                # --- NUEVOS CAMPOS ---
+                profile_pic="https://ui-avatars.com/api/?name=Laura+Vargas&background=48BB78&color=fff",
+                vacation_details={"assigned": 15, "used": 5, "available": 10}
             )
             db.add(staff_rrhh)
             print("  ➕ Creando empleado: Laura Vargas (RRHH)")

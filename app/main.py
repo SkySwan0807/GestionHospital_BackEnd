@@ -15,7 +15,7 @@ Imports from:
   - app.database (engine, Base)
   - app.routers (specialties)
 """
-
+from typing import List
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.database import engine, Base

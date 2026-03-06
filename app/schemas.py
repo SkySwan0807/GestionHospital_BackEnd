@@ -13,7 +13,7 @@ For Story 1, we define three schemas:
 """
 
 from pydantic import BaseModel, Field, field_validator, ConfigDict
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import datetime
 
 
@@ -105,20 +105,21 @@ class SpecialtyOut(SpecialtyBase):
 
 
 # ============================================================================
-# 4. SCHEMAS PARA RECURSOS HUMANOS / STAFF (END-27 - Tu código)
+# 4. HR / STAFF SCHEMAS (END-27)
 # ============================================================================
+
 class StaffPositionUpdate(BaseModel):
     """
-    El 'guardia de seguridad' para cuando RRHH asigna un cargo a un empleado.
+    Validation schema for HR when assigning a position to an employee.
     """
-    department_id: int = Field(description="ID del departamento (ej. 2 para Urgencias)")
-    role_level: str = Field(description="Nivel del cargo (ej. Médico Residente)")
-    specialty_id: Optional[int] = Field(default=None, description="ID de la especialidad (Opcional)")
+    department_id: int = Field(description="Department ID (e.g., 2 for Emergency)")
+    role_level: str = Field(description="Role level (e.g., Medical Resident)")
+    specialty_id: Optional[int] = Field(default=None, description="Specialty ID (Optional)")
 
 
 class StaffResponse(BaseModel):
     """
-    El formato en el que le devolveremos los datos del empleado al Frontend.
+    Response schema defining the employee data returned to the Frontend.
     """
     id: int
     first_name: str
@@ -129,5 +130,13 @@ class StaffResponse(BaseModel):
     specialty_id: Optional[int] = None
     status: str
 
-    # Permite a Pydantic leer los objetos directos de la base de datos (SQLAlchemy)
+    # --- NEW FIELDS FOR FRONTEND ---
+
+    # URL or path to the employee's profile picture
+    profile_pic: Optional[str] = None
+
+    # JSON structure tracking vacation days (assigned, used, available)
+    vacation_details: Optional[Dict[str, Any]] = None
+
+    # Allows Pydantic to read ORM models (SQLAlchemy) directly
     model_config = ConfigDict(from_attributes=True)
