@@ -1,0 +1,18 @@
+# Python temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Databases
+*.db
+*.sqlite3
+
+# Environments
+.venv/
+env/
+venv/
+.env
+
+# Editor settings
+.vscode/
+.idea/
