@@ -47,3 +47,28 @@ def search_staff_endpoint(
         )
 
     return results
+
+# =====================================================================
+# PATCH /staff/update-profile
+# =====================================================================
+@router.patch(
+    "/update-profile",
+    response_model=schemas.StaffOut, 
+    status_code=status.HTTP_200_OK
+)
+def update_profile_endpoint(
+    payload: schemas.StaffSelfUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Actualiza la información de contacto recibiendo un objeto JSON.
+    """
+    updated_user = crud.update_staff_contact_info(db, payload)
+    
+    if not updated_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Staff with ID {payload.staff_id} not found"
+        )
+    
+    return updated_user

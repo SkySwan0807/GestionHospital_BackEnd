@@ -12,14 +12,12 @@ For Story 1, we define three schemas:
   - SpecialtyOut   : For outgoing API responses
 """
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict, EmailStr
 from typing import Optional
 from datetime import datetime
-from app.schemas import SpecialtyOut
 
-from app.schemas import SpecialtyBase
 
-from pydantic import ConfigDict
+
 
 # ============================================================================
 # 1. THE FOUNDATION
@@ -137,3 +135,12 @@ class StaffOut(StaffBase):
     # This allows Pydantic to read ORM objects directly
     model_config = ConfigDict(from_attributes=True)
 
+class StaffSelfUpdate(BaseModel):
+    
+    staff_id: int = Field(..., description="ID del empleado que realiza el cambio")
+    email: Optional[EmailStr] = Field(None, description="Nuevo email")
+    phone_number: Optional[str] = Field(None, description="Nuevo teléfono")
+    profile_pic: Optional[str] = Field(None, description="URL de la foto")
+
+    # Seguridad: Si el JSON trae 'role_level', FastAPI lo rechazará automáticamente.
+    model_config = ConfigDict(extra="forbid")

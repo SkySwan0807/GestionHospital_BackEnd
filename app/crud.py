@@ -122,3 +122,21 @@ def search_staff(
     # Return all matching results
     return query.all()
 
+def update_staff_contact_info(db: Session, update_data: schemas.StaffSelfUpdate):
+    # 1. Buscar al empleado por el ID que viene en el JSON
+    db_staff = db.query(Staff).filter(Staff.id == update_data.staff_id).first()
+    
+    if not db_staff:
+        return None
+
+    # 2. Convertir el esquema a dict, pero quitamos 'staff_id' porque ese no se actualiza
+    payload = update_data.model_dump(exclude_unset=True)
+    payload.pop("staff_id", None) 
+
+    # 3. Actualizar solo los campos enviados (email, phone, etc.)
+    for key, value in payload.items():
+        setattr(db_staff, key, value)
+
+    db.commit()
+    db.refresh(db_staff)
+    return db_staff
