@@ -98,7 +98,7 @@ def seed_data():
         if not staff_2:
             staff_2 = Staff(
                 first_name="Ana", last_name="Gómez", email="agomez@hospital.com",
-                role_level="Head Nurse", department_id=dept_cirugia.id, status="Active", start_date=hoy,
+                role_level="Head Nurse", department_id=dept_cirugia.id, specialty_id=spec_cardio.id, status="Active", start_date=hoy,
                 # --- NUEVOS CAMPOS ---
                 profile_pic="https://ui-avatars.com/api/?name=Ana+Gomez&background=F56565&color=fff",
                 vacation_details={"assigned": 20, "used": 0, "available": 20}
@@ -127,7 +127,7 @@ def seed_data():
         if not staff_4:
             staff_4 = Staff(
                 first_name="María", last_name="Rodríguez", email="mrodriguez@hospital.com",
-                role_level="Receptionist", department_id=dept_urgencias.id, status="Active", start_date=hoy,
+                role_level="Receptionist", department_id=dept_urgencias.id, specialty_id=spec_neuro.id, status="Active", start_date=hoy,
                 # --- NUEVOS CAMPOS ---
                 profile_pic="https://ui-avatars.com/api/?name=Maria+Rodriguez&background=9F7AEA&color=fff",
                 vacation_details={"assigned": 15, "used": 2, "available": 13}
