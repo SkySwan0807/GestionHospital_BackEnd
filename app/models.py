@@ -32,9 +32,11 @@ class Specialty(Base):
 class Staff(Base):
     __tablename__ = "staff"
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
+
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
-    email = Column(String(255), nullable=False, unique=True, index=True)
+    # ELIMINADO: email (Ahora vive en la tabla User)
     phone_number = Column(String(50))
     start_date = Column(Date, nullable=False)
     status = Column(String(50), default='Online')
@@ -55,8 +57,7 @@ class Staff(Base):
 
     department = relationship("Department", back_populates="staff_members")
     specialty = relationship("Specialty", back_populates="staff_members")
-    user_account = relationship("User", back_populates="staff_profile", uselist=False)
-
+    user = relationship("User", back_populates="staff_profile", uselist=False)
 
 class Salary(Base):
     __tablename__ = "salaries"
@@ -75,26 +76,8 @@ class Vacation(Base):
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
     status = Column(String(50), default='Pending')
-
-    # HR exclusive reason for internal tracking
     reason = Column(String(255), nullable=True)
-
-    # Employee's justification for the request
-    description = Column(String(255), nullable=True)
-
-    # --- NEW FRONTEND FIELDS ---
-
-    # Additional notes or comments about the request
     comment = Column(String(255), nullable=True)
-
-    # HR explanation if the vacation is denied
-    rejection_reason = Column(String(255), nullable=True)
-
-    # URL or path to the uploaded file (e.g., medical certificate)
-    attached_document = Column(String(255), nullable=True)
-
-    # Timestamp when the employee submitted the request
-    submission_date = Column(DateTime, default=datetime.utcnow)
 
 
 class Schedule(Base):
@@ -113,13 +96,13 @@ class Schedule(Base):
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), nullable=False, unique=True, index=True)
-    password_hash = Column(String(255), nullable=False)
-    staff_id = Column(Integer, ForeignKey("staff.id", ondelete="SET NULL"), nullable=True)
-    role = Column(String(50), nullable=False, default='User')
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    email = Column(String(100), unique=True, index=True, nullable=False)
+    password = Column(String(255), nullable=False)
+    role = Column(String(50), nullable=False)
 
-    staff_profile = relationship("Staff", back_populates="user_account")
+    # Relaciones bidireccionales (Uno a Uno)
+    staff_profile = relationship("Staff", back_populates="user", uselist=False)
+    patient_profile = relationship("Patient", back_populates="user", uselist=False)
 
 
 # =========================================================================
@@ -129,11 +112,13 @@ class User(Base):
 class Patient(Base):
     __tablename__ = "patients"
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(100), nullable=False)
     date_of_birth = Column(Date)
     contact_number = Column(String(50))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    user = relationship("User", back_populates="patient_profile")
 
 
 class MedicalHistory(Base):
@@ -148,18 +133,11 @@ class Appointment(Base):
     __tablename__ = "appointments"
     id = Column(Integer, primary_key=True, index=True)
     patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"))
-    doctor_id = Column(Integer, ForeignKey("staff.id", ondelete="RESTRICT"))
-    appointment_date = Column(DateTime(timezone=True), nullable=False)
-    reason = Column(String(255))
+    doctor_id = Column(Integer, ForeignKey("staff.id", ondelete="CASCADE"))
+    date = Column(Date, nullable=False)
+    time = Column(Time, nullable=False)
+    reason = Column(String(255), nullable=True)
     status = Column(String(50), default='Scheduled')
-
-    # The specific day of the medical visit
-    appointment_date = Column(Date, nullable=False)
-
-    # --- NEW FIELD ---
-
-    # The exact time scheduled for the visit (e.g., 14:30:00)
-    appointment_time = Column(Time, nullable=False)
 
 
 # =========================================================================
