@@ -1,4 +1,6 @@
+
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Date, Time, Numeric, JSON
+from datetime import datetime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .staff_contact_database import Base
@@ -42,7 +44,15 @@ class Staff(Base):
     department_id = Column(Integer, ForeignKey("departments.id", ondelete="RESTRICT"))
     specialty_id = Column(Integer, ForeignKey("specialties.id", ondelete="RESTRICT"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # URL path to the employee's profile picture storage
+    profile_pic = Column(String(255), nullable=True)
+
+    # JSON object tracking vacation days (assigned, used, available)
+    vacation_details = Column(
+        JSON,
+        default={"assigned": 15, "used": 0, "available": 15}
+    )
 
     department = relationship("Department", back_populates="staff_members")
     specialty = relationship("Specialty", back_populates="staff_members")
@@ -60,12 +70,32 @@ class Salary(Base):
 
 class Vacation(Base):
     __tablename__ = "vacations"
+
     id = Column(Integer, primary_key=True, index=True)
     staff_id = Column(Integer, ForeignKey("staff.id", ondelete="CASCADE"))
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
     status = Column(String(50), default='Pending')
-    reason = Column(String(255))
+
+    # HR exclusive reason for internal tracking
+    reason = Column(String(255), nullable=True)
+
+    # Employee's justification for the request
+    description = Column(String(255), nullable=True)
+
+    # --- NEW FRONTEND FIELDS ---
+
+    # Additional notes or comments about the request
+    comment = Column(String(255), nullable=True)
+
+    # HR explanation if the vacation is denied
+    rejection_reason = Column(String(255), nullable=True)
+
+    # URL or path to the uploaded file (e.g., medical certificate)
+    attached_document = Column(String(255), nullable=True)
+
+    # Timestamp when the employee submitted the request
+    submission_date = Column(DateTime, default=datetime.utcnow)
 
 
 class Schedule(Base):
@@ -123,6 +153,14 @@ class Appointment(Base):
     appointment_date = Column(DateTime(timezone=True), nullable=False)
     reason = Column(String(255))
     status = Column(String(50), default='Scheduled')
+
+    # The specific day of the medical visit
+    appointment_date = Column(Date, nullable=False)
+
+    # --- NEW FIELD ---
+
+    # The exact time scheduled for the visit (e.g., 14:30:00)
+    appointment_time = Column(Time, nullable=False)
 
 
 # =========================================================================

@@ -10,6 +10,7 @@ client = TestClient(app)
 
 
 def setup_module():
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
 
@@ -20,7 +21,6 @@ def teardown_module():
 def test_create_staff():
     db = Session(bind=engine)
 
-    # Crear registros requeridos por las FK
     department = Department(
         name="Cardiology",
         description="Heart department"
@@ -46,9 +46,10 @@ def test_create_staff():
             "phone_number": "12345678",
             "start_date": "2024-01-01",
             "status": "Active",
-            "role_level": "Senior",
+            "role_level": "Resident",
             "department_id": department.id,
-            "specialty_id": specialty.id
+            "specialty_id": specialty.id,
+            "profile_pic": "/images/ana.png"
         }
     )
 
@@ -57,11 +58,15 @@ def test_create_staff():
 
     assert data["first_name"] == "Ana"
     assert data["department_id"] == department.id
+    assert data["profile_pic"] == "/images/ana.png"
+    assert data["vacation_details"]["assigned"] == 15
+    assert data["vacation_details"]["used"] == 0
+    assert data["vacation_details"]["available"] == 15
+
 
 def test_get_staff():
     db = Session(bind=engine)
 
-    # Crear registros necesarios
     department = Department(
         name="Neurology",
         description="Brain department"
@@ -78,7 +83,6 @@ def test_get_staff():
     db.refresh(department)
     db.refresh(specialty)
 
-    # Crear staff
     create_response = client.post(
         "/api/staff/",
         json={
@@ -88,9 +92,10 @@ def test_get_staff():
             "phone_number": "87654321",
             "start_date": "2024-01-01",
             "status": "Active",
-            "role_level": "Junior",
+            "role_level": "Specialist",
             "department_id": department.id,
-            "specialty_id": specialty.id
+            "specialty_id": specialty.id,
+            "profile_pic": "/images/carlos.png"
         }
     )
 
@@ -108,6 +113,11 @@ def test_get_staff():
     assert data["id"] == staff_id
     assert data["first_name"] == "Carlos"
     assert data["email"] == "carlos.perez@test.com"
+    assert data["profile_pic"] == "/images/carlos.png"
+    assert data["vacation_details"]["assigned"] == 15
+    assert data["vacation_details"]["used"] == 0
+    assert data["vacation_details"]["available"] == 15
+
 
 def test_update_staff_first_name():
     db = Session(bind=engine)
@@ -130,9 +140,10 @@ def test_update_staff_first_name():
             "phone_number": "12345678",
             "start_date": "2024-01-01",
             "status": "Active",
-            "role_level": "Junior",
+            "role_level": "Resident",
             "department_id": department.id,
-            "specialty_id": specialty.id
+            "specialty_id": specialty.id,
+            "profile_pic": "/images/maria.png"
         }
     )
 
@@ -146,6 +157,46 @@ def test_update_staff_first_name():
     assert update_response.status_code == 200
     assert update_response.json()["first_name"] == "NuevoNombre"
 
+
+def test_update_profile_pic():
+    db = Session(bind=engine)
+
+    department = Department(name="DeptPic", description="Desc")
+    specialty = Specialty(name="SpecPic", description="Desc")
+
+    db.add(department)
+    db.add(specialty)
+    db.commit()
+    db.refresh(department)
+    db.refresh(specialty)
+
+    create_response = client.post(
+        "/api/staff/",
+        json={
+            "first_name": "Pic",
+            "last_name": "User",
+            "email": "pic@test.com",
+            "phone_number": "11111111",
+            "start_date": "2024-01-01",
+            "status": "Active",
+            "role_level": "Specialist",
+            "department_id": department.id,
+            "specialty_id": specialty.id,
+            "profile_pic": "/images/old.png"
+        }
+    )
+
+    staff_id = create_response.json()["id"]
+
+    response = client.patch(
+        f"/api/staff/{staff_id}",
+        json={"profile_pic": "/images/new.png"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["profile_pic"] == "/images/new.png"
+
+
 def test_update_email_duplicate():
     db = Session(bind=engine)
 
@@ -158,7 +209,6 @@ def test_update_email_duplicate():
     db.refresh(department)
     db.refresh(specialty)
 
-    # Staff 1
     client.post("/api/staff/", json={
         "first_name": "A",
         "last_name": "A",
@@ -166,12 +216,12 @@ def test_update_email_duplicate():
         "phone_number": "11111111",
         "start_date": "2024-01-01",
         "status": "Active",
-        "role_level": "Junior",
+        "role_level": "Resident",
         "department_id": department.id,
-        "specialty_id": specialty.id
+        "specialty_id": specialty.id,
+        "profile_pic": "/images/a.png"
     })
 
-    # Staff 2
     staff2 = client.post("/api/staff/", json={
         "first_name": "B",
         "last_name": "B",
@@ -179,20 +229,21 @@ def test_update_email_duplicate():
         "phone_number": "22222222",
         "start_date": "2024-01-01",
         "status": "Active",
-        "role_level": "Junior",
+        "role_level": "Specialist",
         "department_id": department.id,
-        "specialty_id": specialty.id
+        "specialty_id": specialty.id,
+        "profile_pic": "/images/b.png"
     })
 
     staff2_id = staff2.json()["id"]
 
-    # Intentar duplicar email
     response = client.patch(
         f"/api/staff/{staff2_id}",
         json={"email": "a@test.com"}
     )
 
     assert response.status_code == 400
+
 
 def test_update_staff_not_found():
     response = client.patch(
@@ -201,6 +252,7 @@ def test_update_staff_not_found():
     )
 
     assert response.status_code == 404
+
 
 def test_update_restricted_field():
     db = Session(bind=engine)
@@ -223,9 +275,10 @@ def test_update_restricted_field():
             "phone_number": "12345678",
             "start_date": "2024-01-01",
             "status": "Active",
-            "role_level": "Junior",
+            "role_level": "Resident",
             "department_id": department.id,
-            "specialty_id": specialty.id
+            "specialty_id": specialty.id,
+            "profile_pic": "/images/test.png"
         }
     )
 
@@ -237,4 +290,3 @@ def test_update_restricted_field():
     )
 
     assert response.status_code == 422
-

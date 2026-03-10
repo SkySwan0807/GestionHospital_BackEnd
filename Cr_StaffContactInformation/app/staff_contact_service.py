@@ -20,7 +20,17 @@ def create_staff(db: Session, staff_data: StaffCreate) -> Staff:
             detail="Email already registered"
         )
 
-    new_staff = Staff(**staff_data.model_dump())
+    data = staff_data.model_dump()
+
+    # Ensure default vacation details if not provided
+    if data.get("vacation_details") is None:
+        data["vacation_details"] = {
+            "assigned": 15,
+            "used": 0,
+            "available": 15
+        }
+
+    new_staff = Staff(**data)
 
     db.add(new_staff)
     db.commit()
@@ -29,7 +39,6 @@ def create_staff(db: Session, staff_data: StaffCreate) -> Staff:
     logger.info(f"Staff created successfully with ID: {new_staff.id}")
 
     return new_staff
-
 
 def get_staff(db: Session, staff_id: int) -> Staff:
     """
