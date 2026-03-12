@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from pharmacy.medications.router import router as medications_router
+from pharmacy.medications.category_router import router as categories_router
 from pharmacy.database import Base, engine
 
 # Ensure all models are imported so metadata is populated before create_all
@@ -13,8 +14,8 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Core Medication Inventory API",
-    description="API for the Hospital Management System - Specialty and Medication modules",
-    version="1.0.0",
+    description="API for the Hospital Management System — Medications & Therapeutic Categories",
+    version="1.1.0",
 )
 
 @app.exception_handler(exc.MedicationNotFound)
@@ -34,7 +35,9 @@ def invalid_therapeutic_category_handler(request: Request, e: exc.InvalidTherape
     raise exc.InvalidTherapeuticCategoryException(e.category_id)
 
 app.include_router(medications_router)
+app.include_router(categories_router)
 
-@app.get("/health")
+@app.get("/health", tags=["health"])
 def health_check():
     return {"status": "ok"}
+

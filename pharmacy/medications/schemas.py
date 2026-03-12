@@ -12,7 +12,7 @@ Rules:
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -69,3 +69,27 @@ class MedicationResponse(MedicationBase):
     updated_at: Optional[datetime] = None
 
     model_config = {"from_attributes": True}  # Pydantic v2 (replaces orm_mode)
+
+
+# ── Therapeutic Category schemas ──────────────────────────────────────────
+class TherapeuticCategoryBase(BaseModel):
+    name: str = Field(..., max_length=200, description="Category name (must be unique)")
+    description: Optional[str] = Field(None, max_length=500)
+
+
+class TherapeuticCategoryCreate(TherapeuticCategoryBase):
+    """Payload for creating a new therapeutic category."""
+    pass
+
+
+class TherapeuticCategoryUpdate(BaseModel):
+    """Partial update for therapeutic category. All fields optional."""
+    name: Optional[str] = Field(None, max_length=200)
+    description: Optional[str] = Field(None, max_length=500)
+
+
+class TherapeuticCategoryResponse(TherapeuticCategoryBase):
+    """Read-only projection returned by category endpoints."""
+    id: int
+
+    model_config = {"from_attributes": True}
