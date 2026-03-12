@@ -13,6 +13,9 @@ import os
 import smtplib
 from email.message import EmailMessage
 from dotenv import load_dotenv
+import random
+import string
+from datetime import datetime, timedelta
 
 # Load environment variables
 load_dotenv()
@@ -22,6 +25,9 @@ EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
 EMAIL_USERNAME = os.getenv("EMAIL_USERNAME")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 EMAIL_FROM = os.getenv("EMAIL_FROM")
+
+def generate_code(length: int = 6) -> str:
+    return ''.join(random.choices(string.digits, k=length))
 
 
 def send_email(to_email: str, code: str, type: int):
