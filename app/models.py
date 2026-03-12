@@ -223,3 +223,15 @@ class Tax(Base):
     invoice_id = Column(Integer, ForeignKey("invoices.id", ondelete="CASCADE"))
     tax_name = Column(String(50), nullable=False)
     tax_amount = Column(Numeric(10, 2), nullable=False)
+
+class VerificationCode(Base):
+    __tablename__ = "verification_codes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), nullable=False)
+    code = Column(String(10), nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Boolean, default=False)
+    type = Column(Integer, nullable=False)
+    # 1 = password reset
+    # 2 = register
