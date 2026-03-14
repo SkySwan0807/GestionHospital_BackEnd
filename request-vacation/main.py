@@ -28,6 +28,8 @@ def home():
 def get_requests(db:Annotated[Session, Depends(get_db)]):
   result = db.execute(select(models.Vacation))
   extracting_vacation_requests = result.scalars().all()
+  if not extracting_vacation_requests:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="There is no existence data")
   return extracting_vacation_requests
 
 
@@ -59,7 +61,16 @@ def update_request_status(request_id:int, updated_data:VacationUpdate, db:Annota
     db.refresh(requested_vacation)
     return requested_vacation
   raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="requested id not found")
- 
+  # for p in vacationRequests:
+  #   if p.get("id") == request_id:
+  #     p["status"] = status
+  #     if status == "rejected":
+  #       if not reason:
+  #         raise HTTPException(status_code=400, detail="reason field is required when status is rejected")
+  #       p["reason"] = reason
+  #     else:
+  #       p["reason"] = None
+  #     return p
     
 # EMPLOYEE VACATION REQUESTS
 
