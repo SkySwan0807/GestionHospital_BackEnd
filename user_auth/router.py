@@ -28,15 +28,28 @@ def get_db():
         db.close()
 
 
-@router.get("/login")
-def login(email: str, password: str, db: Session = Depends(get_db)):
-    """
-    Validates user credentials.
+@router.post("/login/patient")
+def login_patient(email: str, password: str, db: Session = Depends(get_db)):
 
-    Returns:
-        - success: True if credentials are valid
-        - success: False otherwise
-    """
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        return {"success": False, "message": "Invalid User"}
+
+    if not verify_password(password, user.password):
+        return {"success": False, "message": "Invalid Password"}
+
+    if not user.patient_profile:
+        return {"success": False, "message": "User is not a patient"}
+
+    return {
+        "id": user.id,
+        "name": user.patient_profile.first_name + " " + user.patient_profile.last_name,
+        "role": user.role
+    }
+
+@router.post("/login/staff")
+def login_staff(email: str, password: str, db: Session = Depends(get_db)):
 
     user = db.query(User).filter(User.email == email).first()
 
@@ -46,9 +59,12 @@ def login(email: str, password: str, db: Session = Depends(get_db)):
     if not verify_password(password, user.password):
         return {"success": False, "message": "Invalid credentials"}
 
+    if not user.staff_profile:
+        return {"success": False, "message": "User is not staff"}
+
     return {
-        "success": True,
-        "message": "Login successful",
+        "id": user.id,
+        "name": user.staff_profile.first_name + " " + user.staff_profile.last_name,
         "role": user.role
     }
 
@@ -181,7 +197,7 @@ def register_user(
     user = User(
         email=email,
         password=hash_password(password),
-        role="patient"
+        role="Patient"
     )
 
     db.add(user)
