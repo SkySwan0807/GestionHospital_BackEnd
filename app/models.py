@@ -69,32 +69,14 @@ class Salary(Base):
 
 class Vacation(Base):
     __tablename__ = "vacations"
-
     id = Column(Integer, primary_key=True, index=True)
     staff_id = Column(Integer, ForeignKey("staff.id", ondelete="CASCADE"))
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
-    status = Column(String(50), default='Pending')
-
-    # HR exclusive reason for internal tracking
+    status = Column(String(50), default='pending')
+    requestDate = Column(Date, nullable=False, default=date.today)
     reason = Column(String(255), nullable=True)
-
-    # Employee's justification for the request
-    description = Column(String(255), nullable=True)
-
-    # --- NEW FRONTEND FIELDS ---
-
-    # Additional notes or comments about the request
     comment = Column(String(255), nullable=True)
-
-    # HR explanation if the vacation is denied
-    rejection_reason = Column(String(255), nullable=True)
-
-    # URL or path to the uploaded file (e.g., medical certificate)
-    attached_document = Column(String(255), nullable=True)
-
-    # Timestamp when the employee submitted the request
-    submission_date = Column(DateTime, default=datetime.utcnow)
 
 
 class Schedule(Base):
