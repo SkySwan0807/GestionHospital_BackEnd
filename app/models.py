@@ -231,7 +231,6 @@ class VerificationCode(Base):
     email = Column(String(255), nullable=False)
     code = Column(String(10), nullable=False)
     expires_at = Column(DateTime, nullable=False)
-    used = Column(Boolean, default=False)
+    is_authorized = Column(Boolean, default=False)
+    is_used = Column(Boolean, default=False)
     type = Column(Integer, nullable=False)
-    # 1 = password reset
-    # 2 = register

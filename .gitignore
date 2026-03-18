@@ -19,9 +19,9 @@ env/
 .env
 
 # SQLite Database — runtime artifact, not source code
-*.db
-*.sqlite
-*.sqlite3
+# *.db
+# *.sqlite
+# *.sqlite3
 
 # IDE
 .vscode/
