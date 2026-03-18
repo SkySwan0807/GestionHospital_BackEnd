@@ -13,6 +13,7 @@ from user_auth.security import verify_password
 from user_auth.email_service import send_email, generate_code
 from user_auth.security import hash_password
 from datetime import datetime, timedelta
+import re
 
 CODE_EXPIRATION_MINUTES = 10
 
@@ -36,11 +37,11 @@ def login_patient(email: str, password: str, db: Session = Depends(get_db)):
     if not user:
         return {"success": False, "message": "Invalid User"}
 
-    if not verify_password(password, user.password):
-        return {"success": False, "message": "Invalid Password"}
-
     if not user.patient_profile:
         return {"success": False, "message": "User is not a patient"}
+
+    if not verify_password(password, user.password):
+        return {"success": False, "message": "Invalid Password"}
 
     return {
         "id": user.id,
@@ -56,11 +57,11 @@ def login_staff(email: str, password: str, db: Session = Depends(get_db)):
     if not user:
         return {"success": False, "message": "Invalid credentials"}
 
-    if not verify_password(password, user.password):
-        return {"success": False, "message": "Invalid credentials"}
-
     if not user.staff_profile:
         return {"success": False, "message": "User is not staff"}
+
+    if not verify_password(password, user.password):
+        return {"success": False, "message": "Invalid credentials"}
 
     return {
         "id": user.id,
@@ -73,6 +74,9 @@ def forgot_password(email: str, db: Session = Depends(get_db)):
 
     if not verify_user(email, db):
         raise HTTPException(status_code=404, detail="User not found")
+
+    if not is_valid_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email format")
 
     code = generate_code()
 
@@ -98,6 +102,9 @@ def new_user(email: str, db: Session = Depends(get_db)):
     if verify_user(email, db):
         raise HTTPException(status_code=400, detail="Email already registered")
 
+    if not is_valid_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email format")
+
     code = generate_code()
 
     verification = VerificationCode(
@@ -119,6 +126,9 @@ def new_user(email: str, db: Session = Depends(get_db)):
 
 @router.post("/verify")
 def verify(email: str, code: str, db: Session = Depends(get_db)):
+
+    if not is_valid_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email format")
 
     verification = db.query(VerificationCode).filter(
         VerificationCode.email == email,
@@ -165,6 +175,9 @@ def reset_password(
     if not verify_user(email, db):
         raise HTTPException(status_code=404, detail="User not found")
 
+    if not is_valid_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email format")
+
     user = db.query(User).filter(User.email == email).first()
 
     if new_password != password_confirmation:
@@ -188,11 +201,17 @@ def register_user(
     db: Session = Depends(get_db)
 ):
 
+    if not is_valid_email(email):
+        raise HTTPException(status_code=400, detail="Invalid email format")
+
     if verify_user(email, db):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     if password != confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match")
+
+    if not is_valid_phone(contact_number):
+        raise HTTPException(status_code=400, detail="Invalid phone number")
 
     user = User(
         email=email,
@@ -219,3 +238,11 @@ def register_user(
 
 def verify_user(email: str, db: Session):
     return db.query(User).filter(User.email == email).first()
+
+def is_valid_email(email: str) -> bool:
+    pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+    return re.match(pattern, email) is not None
+
+def is_valid_phone(phone: str) -> bool:
+    pattern = r"^\+?\d{7,15}$"
+    return re.match(pattern, phone) is not None
