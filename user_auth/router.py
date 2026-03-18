@@ -84,7 +84,8 @@ def forgot_password(email: str, db: Session = Depends(get_db)):
         email=email,
         code=code,
         expires_at=datetime.utcnow() + timedelta(minutes=CODE_EXPIRATION_MINUTES),
-        used=False,
+        is_authorized = False,
+        is_used=False,
         type=1
     )
 
@@ -94,7 +95,7 @@ def forgot_password(email: str, db: Session = Depends(get_db)):
     send_email(email, code, 1)
 
     return {"message": "Verification code sent to the provided email address: " + email +
-            "to reset your password."}
+            " to reset your password."}
 
 @router.post("/new_user")
 def new_user(email: str, db: Session = Depends(get_db)):
@@ -111,7 +112,8 @@ def new_user(email: str, db: Session = Depends(get_db)):
         email=email,
         code=code,
         expires_at=datetime.utcnow() + timedelta(minutes=CODE_EXPIRATION_MINUTES),
-        used=False,
+        is_authorized=False,
+        is_used=False,
         type=2
     )
 
@@ -121,7 +123,7 @@ def new_user(email: str, db: Session = Depends(get_db)):
     send_email(email, code, 2)
 
     return {"message": "Verification code sent to the provided email address: " + email +
-            "to complete your registration."}
+            " to complete your registration."}
 
 
 @router.post("/verify")
@@ -138,13 +140,13 @@ def verify(email: str, code: str, db: Session = Depends(get_db)):
     if not verification:
         raise HTTPException(status_code=400, detail="Invalid code or email")
 
-    if verification.used:
+    if verification.is_used or verification.is_authorized:
         raise HTTPException(status_code=400, detail="Code already used")
 
     if verification.expires_at < datetime.utcnow():
         raise HTTPException(status_code=400, detail="Code expired")
 
-    verification.used = True
+    verification.is_authorized = True
     db.commit()
 
     if verification.type == 1:
@@ -178,13 +180,24 @@ def reset_password(
     if not is_valid_email(email):
         raise HTTPException(status_code=400, detail="Invalid email format")
 
+    verification = db.query(VerificationCode).filter(
+        VerificationCode.email == email,
+        VerificationCode.expires_at > datetime.utcnow(),
+        VerificationCode.is_authorized == True,
+        VerificationCode.is_used == False,
+        VerificationCode.type == 1
+    ).first()
+
+    if not verification:
+        raise HTTPException(status_code=400, detail="No authorized code found for this email")
+
     user = db.query(User).filter(User.email == email).first()
 
     if new_password != password_confirmation:
         raise HTTPException(status_code=400, detail="Passwords do not match")
 
     user.password = hash_password(new_password)
-
+    verification.is_used = True
     db.commit()
 
     return {"message": "Password updated successfully"}
@@ -206,6 +219,17 @@ def register_user(
 
     if verify_user(email, db):
         raise HTTPException(status_code=400, detail="Email already registered")
+
+    verification = db.query(VerificationCode).filter(
+        VerificationCode.email == email,
+        VerificationCode.expires_at > datetime.utcnow(),
+        VerificationCode.is_authorized == True,
+        VerificationCode.is_used == False,
+        VerificationCode.type == 2
+    ).first()
+
+    if not verification:
+        raise HTTPException(status_code=400, detail="No authorized code found for this email")
 
     if password != confirm_password:
         raise HTTPException(status_code=400, detail="Passwords do not match")
@@ -231,6 +255,7 @@ def register_user(
         contact_number=contact_number
     )
 
+    verification.is_used = True
     db.add(patient)
     db.commit()
 
