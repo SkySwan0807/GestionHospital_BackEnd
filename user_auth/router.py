@@ -13,21 +13,12 @@ from user_auth.security import verify_password
 from user_auth.email_service import send_email, generate_code
 from user_auth.security import hash_password
 from datetime import datetime, timedelta
+from app.database import get_db
 import re
 
 CODE_EXPIRATION_MINUTES = 10
 
 router = APIRouter(tags=["Authentication"])
-
-
-# Dependency injection for DB session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 
 @router.post("/login/patient")
 def login_patient(email: str, password: str, db: Session = Depends(get_db)):
@@ -41,7 +32,7 @@ def login_patient(email: str, password: str, db: Session = Depends(get_db)):
         return {"success": False, "message": "User is not a patient"}
 
     if not verify_password(password, user.password):
-        return {"success": False, "message": "Invalid Password"}
+        raise HTTPException(status_code=401, detail="Invalid Password")
 
     return {
         "id": user.id,
@@ -61,7 +52,7 @@ def login_staff(email: str, password: str, db: Session = Depends(get_db)):
         return {"success": False, "message": "User is not staff"}
 
     if not verify_password(password, user.password):
-        return {"success": False, "message": "Invalid credentials"}
+        raise HTTPException(status_code=401, detail="Invalid Password")
 
     return {
         "id": user.id,
@@ -72,11 +63,11 @@ def login_staff(email: str, password: str, db: Session = Depends(get_db)):
 @router.post("/forgot_password")
 def forgot_password(email: str, db: Session = Depends(get_db)):
 
-    if not verify_user(email, db):
-        raise HTTPException(status_code=404, detail="User not found")
-
     if not is_valid_email(email):
         raise HTTPException(status_code=400, detail="Invalid email format")
+
+    if not verify_user(email, db):
+        raise HTTPException(status_code=404, detail="User not found")
 
     code = generate_code()
 
@@ -140,8 +131,11 @@ def verify(email: str, code: str, db: Session = Depends(get_db)):
     if not verification:
         raise HTTPException(status_code=400, detail="Invalid code or email")
 
-    if verification.is_used or verification.is_authorized:
+    if verification.is_used:
         raise HTTPException(status_code=400, detail="Code already used")
+
+    if verification.is_authorized:
+        raise HTTPException(status_code=400, detail="Code already verified")
 
     if verification.expires_at < datetime.utcnow():
         raise HTTPException(status_code=400, detail="Code expired")
