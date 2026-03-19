@@ -20,7 +20,7 @@ from sqlalchemy import func
 
 
 from app.models import Staff, Department, Specialty
-from app.schemas import SpecialtyCreate
+from app.schemas import SpecialtyCreate, StaffSelfUpdate
 
 
 def get_all_specialties(db: Session) -> list[Specialty]:
@@ -122,7 +122,7 @@ def search_staff(
     # Return all matching results
     return query.all()
 
-def update_staff_contact_info(db: Session, update_data: schemas.StaffSelfUpdate):
+def update_staff_contact_info(db: Session, update_data: StaffSelfUpdate):
     # 1. Buscar al empleado por el ID que viene en el JSON
     db_staff = db.query(Staff).filter(Staff.id == update_data.staff_id).first()
     
