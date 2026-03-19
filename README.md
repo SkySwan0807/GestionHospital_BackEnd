@@ -61,17 +61,65 @@ La arquitectura de la base de datos se divide en los siguientes modelos centrale
 * Departments y Specialties: Actuan como catalogos para organizar la estructura medica del recinto.
 * Vacations: Registra el historial y el estado (pendiente, aceptado, rechazado) de las solicitudes de tiempo libre.
 
-## 7. Como ejecutar la aplicacion
-Con tu entorno virtual activado, ejecuta el siguiente comando en la raiz del proyecto para encender el servidor:
+Es una excelente adición. Pensar en facilitar el trabajo del equipo de QA documentando los comandos exactos por cada rama demuestra un gran nivel de organización y liderazgo tecnico.
 
+He reestructurado el **Punto 7** para que sea una guía paso a paso muy clara. He incluido los comandos que me pasaste, añadiendo las instrucciones de navegación (como usar `cd` para entrar a las carpetas), ya que si QA corre el comando desde el lugar equivocado, el servidor les arrojará un error.
+
+Copia este bloque y reemplaza todo tu **Punto 7** actual en el `README.md`:
+
+***
+
+## 7. Como ejecutar la aplicacion
+
+Con tu entorno virtual activado, la forma de levantar el servidor dependera de la rama (branch) que estes evaluando, ya que los diferentes modulos se trabajaron en directorios aislados durante esta fase de desarrollo.
+
+### 7.1. Ejecucion en la rama principal (main)
+Si te encuentras en la rama principal y en la raiz del proyecto, ejecuta:
 ```bash
 uvicorn app.main:app --reload
 ```
 
-Una vez que la consola indique que la aplicacion ha iniciado, abre tu navegador web y visita:
+### 7.2. Ejecucion por ramas especificas (Guia para QA)
+Para el equipo de QA: Al cambiar de rama utilizando `git checkout <nombre-de-la-rama>`, asegurense de prestar atencion a la carpeta en la que deben ubicarse antes de ejecutar el servidor.
+
+Rama: Features/staff-contact-search
+* Ubicacion: Raiz del proyecto.
+* Comando:
+```bash
+uvicorn app.main:app --reload
+```
+
+Ramas: feature/user-Authentication o user-Authetication
+* Ubicacion: Raiz del proyecto.
+* Comando principal recomendado:
+```bash
+python -m uvicorn user_auth.main:app --reload
+```
+* (Alternativa): Ingresar a la carpeta `cd user_auth` y ejecutar `fastapi dev main.py`.
+
+Rama: feature/leave-vacation-request-staff
+* Ubicacion: Debes ingresar a la subcarpeta del modulo.
+* Comandos:
+```bash
+cd request-vacation
+fastapi dev main.py
+```
+
+Rama: CR-StaffContactInformation
+* Ubicacion: Debes ingresar a la subcarpeta del modulo.
+* Comandos:
+```bash
+cd Cr_StaffContactInformation
+python -m uvicorn app.main:app --reload
+```
+
+### 7.3. Interfaz de Pruebas (Swagger UI)
+Una vez que ejecutes el comando correspondiente y la consola indique que la aplicacion ha iniciado (Application startup complete), abre tu navegador web y visita:
+
 `http://localhost:8000/docs`
 
-Alli encontraras la interfaz interactiva de Swagger UI. Desde esta pagina, cualquier persona, tenga o no conocimientos profundos de programacion, puede visualizar, entender y probar todos los endpoints del sistema.
+Alli encontraras la interfaz interactiva de Swagger UI. Desde esta pagina podras visualizar y probar unicamente los endpoints correspondientes al codigo de la rama que tengas activa en ese momento.
+
 
 ## 8. Logica de autenticacion y payloads
 
