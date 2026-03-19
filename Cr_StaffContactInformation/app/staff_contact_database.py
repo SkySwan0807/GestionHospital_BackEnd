@@ -36,7 +36,13 @@ load_dotenv()
 # ============================================================================
 # STEP 1 — THE ENGINE
 # ============================================================================
+import os
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base
 
+load_dotenv()
 
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./hospital.db")

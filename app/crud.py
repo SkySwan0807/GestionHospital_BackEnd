@@ -18,8 +18,9 @@ Imports from:
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.models import Specialty
-from app.schemas import SpecialtyCreate
+
+from app.models import Staff, Department, Specialty
+from app.schemas import SpecialtyCreate, StaffSelfUpdate
 
 
 def get_all_specialties(db: Session) -> list[Specialty]:
@@ -78,3 +79,64 @@ def create_specialty(db: Session, specialty: SpecialtyCreate) -> Specialty:
     
     # Step 5: Return the populated object
     return db_specialty
+
+def search_staff(
+    db: Session,
+    name: str | None = None,
+    department: str | None = None,
+    role: str | None = None,
+    location: str | None = None
+) -> list[Staff]:
+    """
+    Search staff records with optional filters.
+    - name: matches first_name or last_name (case-insensitive)
+    - department: matches department name
+    - role: matches role_level
+    - location: matches location (if Staff has this field)
+    """
+
+    # Start query joining Department and Specialty for filtering
+    query = db.query(Staff).join(Department).join(Specialty)
+
+    # Filter by name (first or last)
+    if name:
+        query = query.filter(
+            or_(
+                Staff.first_name.ilike(f"%{name}%"),
+                Staff.last_name.ilike(f"%{name}%")
+            )
+        )
+
+    # Filter by department name
+    if department:
+        query = query.filter(Department.name.ilike(f"%{department}%"))
+
+    # Filter by role level
+    if role:
+        query = query.filter(Staff.role_level.ilike(f"%{role}%"))
+
+    # Filter by location (if exists in Staff model)
+    if location and hasattr(Staff, "location"):
+        query = query.filter(getattr(Staff, "location").ilike(f"%{location}%"))
+
+    # Return all matching results
+    return query.all()
+
+def update_staff_contact_info(db: Session, update_data: StaffSelfUpdate):
+    # 1. Buscar al empleado por el ID que viene en el JSON
+    db_staff = db.query(Staff).filter(Staff.id == update_data.staff_id).first()
+    
+    if not db_staff:
+        return None
+
+    # 2. Convertir el esquema a dict, pero quitamos 'staff_id' porque ese no se actualiza
+    payload = update_data.model_dump(exclude_unset=True)
+    payload.pop("staff_id", None) 
+
+    # 3. Actualizar solo los campos enviados (email, phone, etc.)
+    for key, value in payload.items():
+        setattr(db_staff, key, value)
+
+    db.commit()
+    db.refresh(db_staff)
+    return db_staff

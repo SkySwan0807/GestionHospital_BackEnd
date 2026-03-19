@@ -12,9 +12,11 @@ For Story 1, we define three schemas:
   - SpecialtyOut   : For outgoing API responses
 """
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict, EmailStr
 from typing import Optional
 from datetime import datetime
+
+
 
 
 # ============================================================================
@@ -102,3 +104,43 @@ class SpecialtyOut(SpecialtyBase):
     # "Oh, it's an object? I'll look for obj.id and obj.name instead of obj['id']"
     # ------------------------------------------------------------------
     model_config = ConfigDict(from_attributes=True)
+
+# =====================================================================
+# STAFF SCHEMAS
+# =====================================================================
+
+class StaffBase(BaseModel):
+    """
+    Shared fields for Staff input/output.
+    These represent the main contact information and relationships.
+    """
+    first_name: str = Field(..., description="Employee's first name")
+    last_name: str = Field(..., description="Employee's last name")
+    email: str = Field(..., description="Employee's email address")
+    phone_number: Optional[str] = Field(None, description="Employee's phone number")
+    role_level: Optional[str] = Field(None, description="Role level or position")
+    status: Optional[str] = Field(None, description="Current status (e.g., Online/Offline)")
+    department: Optional[str] = Field(None, description="Department name")
+    specialty: Optional[str] = Field(None, description="Specialty name")
+
+
+class StaffOut(StaffBase):
+    """
+    Schema for API responses.
+    Includes database-generated fields like id and created_at.
+    """
+    id: int = Field(..., description="Unique staff ID")
+    created_at: datetime = Field(..., description="Timestamp of record creation")
+
+    # This allows Pydantic to read ORM objects directly
+    model_config = ConfigDict(from_attributes=True)
+
+class StaffSelfUpdate(BaseModel):
+    
+    staff_id: int = Field(..., description="ID del empleado que realiza el cambio")
+    email: Optional[EmailStr] = Field(None, description="Nuevo email")
+    phone_number: Optional[str] = Field(None, description="Nuevo teléfono")
+    profile_pic: Optional[str] = Field(None, description="URL de la foto")
+
+    # Seguridad: Si el JSON trae 'role_level', FastAPI lo rechazará automáticamente.
+    model_config = ConfigDict(extra="forbid")
