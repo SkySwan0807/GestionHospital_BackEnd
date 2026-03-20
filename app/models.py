@@ -67,17 +67,19 @@ class Salary(Base):
     currency = Column(String(10), default='USD')
     updated_at = Column(DateTime(timezone=True), server_default=func.now())
 
-
 class Vacation(Base):
     __tablename__ = "vacations"
-
     id = Column(Integer, primary_key=True, index=True)
-    staff_id = Column(Integer, ForeignKey("staff.id", ondelete="CASCADE"))
+    staff_id = Column(Integer, ForeignKey("staff.id", ondelete="CASCADE"), nullable=False)
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
-    status = Column(String(50), default='Pending')
-    reason = Column(String(255), nullable=True)
-    comment = Column(String(255), nullable=True)
+    request_date = Column(Date, nullable=False, default=date.today)
+    reason = Column(String(255), nullable=False, default="vacation")
+    status = Column(String(20), nullable=False, default="pending")  
+    comment = Column(String(255), nullable=True) 
+    rejection_reason = Column(String(255), nullable=True)
+    attachment_url = Column(String(255), nullable=True)
+    attachment_name = Column(String(255), nullable=True)
 
 
 class Schedule(Base):
