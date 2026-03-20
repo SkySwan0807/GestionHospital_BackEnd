@@ -1,25 +1,9 @@
-"""
-main.py
--------
-Single Responsibility: Application entry point and composition root.
-
-This file:
-  1. Creates the FastAPI application instance
-  2. Creates all database tables on startup
-  3. Mounts the specialties router under /api/v1
-  4. Provides a root health-check endpoint
-
-Imported by: Uvicorn (when booting the server)
-Imports from:
-  - fastapi (FastAPI)
-  - app.database (engine, Base)
-  - app.routers (specialties)
-"""
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.database import engine, Base
 from app.routers import specialties, staff
+from user_auth import router as auth_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -53,6 +37,7 @@ app = FastAPI(
 # a `/api/v2/specialties` later without breaking older Front-End clients.
 app.include_router(specialties.router, prefix="/api/v1")
 app.include_router(staff.router, prefix="/api/v1")
+app.include_router(auth_router.router, prefix="/api/v1")
 
 # ============================================================================
 # 4. HEALTH CHECK ENDPOINT
