@@ -49,9 +49,9 @@ pip install -r requirements.txt
 ```
 
 ## 5. Sobre la base de datos
-El sistema utiliza una arquitectura de persistencia de datos relacional. Para facilitar el trabajo del equipo de desarrollo y QA, el repositorio incluye un archivo llamado `hospital.db`. Esta base de datos SQLite ya se encuentra pre-poblada con catalogos iniciales (departamentos, especialidades) y usuarios de prueba. 
+El sistema utiliza una arquitectura de persistencia de datos relacional. Para facilitar el trabajo del equipo de desarrollo y QA, el repositorio incluye un archivo llamado `hospital.db`. Esta base de datos SQLite ya se encuentra pre-poblada con catalogos iniciales (departamentos, especialidades) y usuarios de prueba con sus respectivas contrasenas encriptadas. 
 
-Esto significa que, una vez clonado el repositorio, el proyecto es "Plug and Play": no necesitas ejecutar scripts de migracion ni crear datos manualmente para comenzar a realizar pruebas funcionales o de integracion.
+Esto significa que el proyecto es "Plug and Play": no necesitas ejecutar scripts de migracion ni crear datos manualmente para comenzar a realizar pruebas funcionales o de integracion.
 
 ## 6. Modelos de Datos Principales
 La arquitectura de la base de datos se divide en los siguientes modelos centrales:
@@ -60,20 +60,13 @@ La arquitectura de la base de datos se divide en los siguientes modelos centrale
 * Patients: Gestiona los datos personales y de contacto de los pacientes.
 * Departments y Specialties: Actuan como catalogos para organizar la estructura medica del recinto.
 * Vacations: Registra el historial y el estado (pendiente, aceptado, rechazado) de las solicitudes de tiempo libre.
-
-Es una excelente adición. Pensar en facilitar el trabajo del equipo de QA documentando los comandos exactos por cada rama demuestra un gran nivel de organización y liderazgo tecnico.
-
-He reestructurado el **Punto 7** para que sea una guía paso a paso muy clara. He incluido los comandos que me pasaste, añadiendo las instrucciones de navegación (como usar `cd` para entrar a las carpetas), ya que si QA corre el comando desde el lugar equivocado, el servidor les arrojará un error.
-
-Copia este bloque y reemplaza todo tu **Punto 7** actual en el `README.md`:
-
-***
+* VerificationCode: Maneja los tokens de un solo uso (OTP) para el registro seguro y recuperacion de contrasenas.
 
 ## 7. Como ejecutar la aplicacion
 
 Con tu entorno virtual activado, la forma de levantar el servidor dependera de la rama (branch) que estes evaluando, ya que los diferentes modulos se trabajaron en directorios aislados durante esta fase de desarrollo.
 
-### 7.1. Ejecucion en la rama principal (main)
+### 7.1. Ejecucion en la rama principal (main / develop)
 Si te encuentras en la rama principal y en la raiz del proyecto, ejecuta:
 ```bash
 uvicorn app.main:app --reload
@@ -120,47 +113,30 @@ Una vez que ejecutes el comando correspondiente y la consola indique que la apli
 
 Alli encontraras la interfaz interactiva de Swagger UI. Desde esta pagina podras visualizar y probar unicamente los endpoints correspondientes al codigo de la rama que tengas activa en ese momento.
 
-
 ## 8. Logica de autenticacion y payloads
 
-El sistema protege sus rutas operativas exigiendo que el usuario inicie sesion. Todo el flujo de acceso, registro de nuevos pacientes y recuperacion de contrasenas esta disenado con un sistema de verificacion por pasos (OTP o codigos de verificacion).
+El sistema protege sus rutas operativas exigiendo que el usuario inicie sesion. Todo el flujo de acceso, registro de nuevos pacientes y recuperacion de contrasenas esta disenado con un sistema de verificacion por pasos (OTP o codigos de verificacion). 
 
-Para que el equipo de QA pueda realizar pruebas funcionales de inicio de sesion sin necesidad de registrar nuevos usuarios, se han habilitado las siguientes credenciales precargadas:
+Las contrasenas en la base de datos estan protegidas mediante encriptacion *bcrypt*. 
 
-Cuentas de Doctor (Rol: Staff):
-* Usuario: dra.suzeth@hospital.com | Contrasena: 123456
-* Usuario: dr.perez@hospital.com | Contrasena: 123456
+### Credenciales de Prueba (QA)
+Para realizar pruebas funcionales sin necesidad de registrar nuevos usuarios, se han habilitado cuentas precargadas. **Todas las cuentas utilizan la misma contrasena universal para pruebas: `1234`**.
+
+Cuentas de Personal (Roles: Staff / Human Resources):
+* Usuario: dra.suzeth@hospital.com | Contrasena: 1234
+* Usuario: cmendoza@hospital.com | Contrasena: 1234
+* Usuario: lvargas@hospital.com | Contrasena: 1234
 
 Cuentas de Paciente (Rol: Patient):
-* Usuario: oscar.vargas@gmail.com | Contrasena: 123456
-* Usuario: carlos.mendoza@gmail.com | Contrasena: 123456
+* Usuario: oscar.vargas@gmail.com | Contrasena: 1234
+* Usuario: juanperez@mail.com | Contrasena: 1234
 
 ### 8.1. Endpoints de Acceso y Onboarding
 
-#### GET /login
-Endpoint para iniciar sesion. Recibe los datos mediante parametros de consulta (query params).
+#### POST /api/v1/login/patient y /api/v1/login/staff
+Endpoint para iniciar sesion segun el rol del usuario. Devuelve un token de acceso tras verificar el hash de la contrasena.
 
-Request (Query params):
-`/login?email=user@email.com&password=userpassword`
-
-Response Body (Exito):
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "role": "patient"
-}
-```
-
-Response Body (Error):
-```json
-{
-  "success": false,
-  "message": "Invalid credentials"
-}
-```
-
-#### POST /register
+#### POST /api/v1/register
 Inicia el flujo de registro para un nuevo paciente solicitando el envio de un codigo de verificacion a su correo.
 
 Request Body:
@@ -170,8 +146,8 @@ Request Body:
 }
 ```
 
-#### POST /verify
-Verifica el codigo enviado al usuario y responde dinamicamente indicando el siguiente paso (`next_step`).
+#### POST /api/v1/verify
+Verifica el codigo enviado al usuario y responde dinamicamente indicando el siguiente paso.
 
 Request Body:
 ```json
@@ -181,29 +157,19 @@ Request Body:
 }
 ```
 
-#### POST /register_user
+#### POST /api/v1/new_user
 Paso final del registro. Se envian los datos personales del paciente para crear su perfil en la base de datos.
 
 Request Body:
 ```json
 {
   "email": "user@email.com",
-  "password": "SecurePassword123",
+  "password": "1234",
+  "confirm_password": "1234",
   "first_name": "Juan",
   "last_name": "Perez",
   "date_of_birth": "1995-01-01",
   "contact_number": "77777777"
-}
-```
-
-#### POST /forgot_password y POST /reset_password
-Flujo de recuperacion de credenciales. El primero envia el codigo y el segundo actualiza la contrasena tras la verificacion.
-
-Request Body (Reset Password):
-```json
-{
-  "email": "user@email.com",
-  "new_password": "NewPassword123"
 }
 ```
 
@@ -213,8 +179,6 @@ Request Body (Reset Password):
 El modulo Staff gestiona a los empleados del hospital y su informacion profesional. Cada miembro del personal esta vinculado a una cuenta de usuario (almacenada en la tabla `users`) a traves de un campo `user_id`. 
 
 Esto significa que, cuando creas un registro de personal, debes proporcionar un `user_id` existente. El sistema asociara automaticamente el correo electronico de ese usuario con el perfil del personal. Como regla estricta de diseno y seguridad, el correo electronico nunca se almacena directamente en la tabla staff; siempre se recupera del usuario relacionado para evitar duplicidades.
-
-Actualmente, cualquier usuario autenticado puede acceder a los endpoints del personal para crear, ver o actualizar la informacion. Sin embargo, existen validaciones estrictas de proteccion de datos: por ejemplo, no es posible modificar ni transferir el `user_id` de un miembro del personal que ya ha sido registrado.
 
 ## 10. Referencia de Endpoints y Payloads
 
@@ -292,20 +256,6 @@ Request Body:
 }
 ```
 
-Response Body:
-```json
-{
-  "start_date": "2026-03-11",
-  "end_date": "2026-04-01",
-  "comment": "string",
-  "reason": "string",
-  "id": 0,
-  "staff_id": 0,
-  "requestDate": "2026-03-01",
-  "status": "pending"
-}
-```
-
 ### 10.3. Respuestas de Error (Error Responses)
 Tabla de referencia para validaciones de QA:
 
@@ -316,29 +266,20 @@ Tabla de referencia para validaciones de QA:
 | PATCH | `/human-resources/vacation-managment/{request_id}` | Vacation request status can only be "accepted" or "rejected" | 402 |
 
 ## 11. The Complete project structure (Estructura del Proyecto)
-El proyecto sigue una arquitectura limpia orientada a micro-modulos, separando claramente la logica global de los modulos independientes. 
+El proyecto sigue una arquitectura limpia orientada a micro-modulos. 
 
 Nota: Directorios de entorno local (`.venv`), configuraciones de IDE (`.idea`) y cachés (`__pycache__`) estan ignorados en el control de versiones y excluidos de este diagrama por claridad.
 
 ```text
 GestionHospital_BackEnd/
-├── app/                               # Nucleo principal de la API
-│   ├── routers/                       # Enrutadores principales
-│   │   ├── specialties.py
-│   │   └── staff.py
-│   ├── main.py                        # Punto de entrada de FastAPI
-│   ├── database.py                    # Configuracion de conexion DB
-│   ├── models.py                      # Modelos SQLAlchemy (Tablas)
-│   ├── schemas.py                     # Modelos Pydantic (Validacion)
-│   └── crud.py                        # Logica de base de datos
+├── app/                               # Nucleo principal de la API y rutas globales
+│   └── routers/
 ├── Cr_StaffContactInformation/        # Modulo de gestion de Personal
-│   ├── app/                           # Logica especifica del modulo
-│   └── tests/                         # Pruebas aisladas del modulo
+│   ├── app/
+│   └── tests/
+├── user_auth/                         # Modulo de autenticacion y seguridad integral
 ├── Diagrams/                          # Documentacion visual de arquitectura
 ├── tests/                             # Pruebas automatizadas globales (QA)
-│   ├── test_specialties.py
-│   └── test_staff.py
-├── .gitignore                         # Reglas de exclusion de Git
 ├── requirements.txt                   # Dependencias del proyecto
 └── hospital.db                        # Base de datos local pre-poblada
 ```
@@ -355,3 +296,4 @@ El proyecto incluye una suite de pruebas de integracion desarrolladas con `pytes
 Casos principales cubiertos:
 * Modulo de Especialidades: Creacion exitosa, rechazo por nombre duplicado (Status 409), validacion de campos (Status 422), y busquedas (Status 200 y 404).
 * Modulo de Personal: Verificacion de llaves foraneas (Status 201), actualizacion exitosa (Status 200), bloqueo por correo duplicado (Status 400), y bloqueo al modificar campos protegidos (Status 422).
+```
