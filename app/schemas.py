@@ -144,3 +144,18 @@ class StaffSelfUpdate(BaseModel):
 
     # Seguridad: Si el JSON trae 'role_level', FastAPI lo rechazará automáticamente.
     model_config = ConfigDict(extra="forbid")
+
+class StaffContactOut(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    email: EmailStr
+    phone_number: str | None = None
+    role_level: str | None = None
+    status: str | None = None
+    profile_pic: str | None = None
+    department: str | None = None
+    specialty: str | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

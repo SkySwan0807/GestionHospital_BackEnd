@@ -16,7 +16,7 @@ Imports from:
 """
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 
 
 from app.models import Staff, Department, Specialty
@@ -132,10 +132,27 @@ def update_staff_contact_info(db: Session, update_data: StaffSelfUpdate):
     # 2. Convertir el esquema a dict, pero quitamos 'staff_id' porque ese no se actualiza
     payload = update_data.model_dump(exclude_unset=True)
     payload.pop("staff_id", None) 
+    
+    staff_fields = {
+        "first_name",
+        "last_name",
+        "phone_number",
+        "profile_pic",
+        "status",
+        "role_level"
+    }
 
     # 3. Actualizar solo los campos enviados (email, phone, etc.)
+    # email se persiste en users
+    # el resto se persiste en staff
+    # para evitar meter campos incorrectos en la entidad equivocada.
     for key, value in payload.items():
-        setattr(db_staff, key, value)
+        if key == "email":
+            if not db_staff.user:
+                return None
+            db_staff.user.email = value
+        elif key in staff_fields:
+            setattr(db_staff, key, value)
 
     db.commit()
     db.refresh(db_staff)
