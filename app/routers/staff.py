@@ -24,8 +24,10 @@ router = APIRouter(
 def search_staff_endpoint(
     name: str | None = None,
     department: str | None = None,
+    specialty: str | None = None,
     role: str | None = None,
-    location: str | None = None,
+    status: str | None = None,
+    email: str | None = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -34,17 +36,22 @@ def search_staff_endpoint(
     - name
     - department
     - role
-    - location
+    - specialty
+    - role
+    - status
+    - email
 
     Returns a list of matching staff records.
     """
-    results = crud.search_staff(db, name, department, role, location)
-
-    if not results:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No staff found with given criteria"
-        )
+    results = crud.search_staff(
+        db=db,
+        name=name,
+        department=department,
+        specialty=specialty,
+        role=role,
+        status=status,
+        email=email
+    )
 
     return [
         schemas.StaffContactOut(

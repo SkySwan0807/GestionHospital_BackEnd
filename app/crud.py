@@ -14,12 +14,11 @@ Imports from:
   - app.models (Specialty)
   - app.schemas (SpecialtyCreate)
 """
-
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, or_
 
 
-from app.models import Staff, Department, Specialty
+from app.models import Staff, Department, Specialty, User
 from app.schemas import SpecialtyCreate, StaffSelfUpdate
 
 
@@ -84,19 +83,31 @@ def search_staff(
     db: Session,
     name: str | None = None,
     department: str | None = None,
+    specialty: str | None = None,
     role: str | None = None,
-    location: str | None = None
+    status: str | None = None,
+    email: str | None = None
 ) -> list[Staff]:
     """
     Search staff records with optional filters.
     - name: matches first_name or last_name (case-insensitive)
     - department: matches department name
     - role: matches role_level
-    - location: matches location (if Staff has this field)
+    - location: matches location (if Staff has this field) [ahora en lugar de dejar location, usamos filtros que sí existen en el dominio. También conviene cargar relaciones con joinedload]
     """
 
     # Start query joining Department and Specialty for filtering
-    query = db.query(Staff).join(Department).join(Specialty)
+    query = (
+        db.query(Staff)
+        .options(
+            joinedload(Staff.user),
+            joinedload(Staff.department),
+            joinedload(Staff.specialty)
+        )
+        .join(Department, Staff.department_id == Department.id, isouter=True)
+        .join(Specialty, Staff.specialty_id == Specialty.id, isouter=True)
+        .join(User, Staff.user_id == User.id, isouter=True)
+    )
 
     # Filter by name (first or last)
     if name:
@@ -110,15 +121,23 @@ def search_staff(
     # Filter by department name
     if department:
         query = query.filter(Department.name.ilike(f"%{department}%"))
+    
+    #Filter by specialty name
+    if specialty:
+        query = query.filter(Specialty.name.ilike(f"%{specialty}%"))
 
     # Filter by role level
     if role:
         query = query.filter(Staff.role_level.ilike(f"%{role}%"))
 
-    # Filter by location (if exists in Staff model)
-    if location and hasattr(Staff, "location"):
-        query = query.filter(getattr(Staff, "location").ilike(f"%{location}%"))
-
+    # Filter by status
+    if status:
+        query = query.filter(Staff.status.ilike(f"%{status}%"))
+        
+    # Filter by email:
+    if email:
+        query = query.filter(User.email.ilike(f"%{email}%"))
+    
     # Return all matching results
     return query.all()
 
