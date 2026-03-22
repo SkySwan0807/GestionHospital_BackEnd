@@ -8,12 +8,18 @@ Routers mounted:
   - staff       → /api/v1/staff
   - vacation    → /api/v1/human-resources/vacation-management
                   /api/v1/myprofile/requestvacation
+  - auth        → /api/v1/login
+                  /api/v1/forgot_password
+                  /api/v1/new_user
+                  /api/v1/verify
+                  /api/v1/reset_password
+                  /api/v1/register
 """
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.database import engine, Base
-from app.routers import specialties, staff, vacation
+from app.routers import specialties, staff, vacation, auth
 
 
 @asynccontextmanager
@@ -35,6 +41,7 @@ app = FastAPI(
 app.include_router(specialties.router, prefix="/api/v1")
 app.include_router(staff.router, prefix="/api/v1")
 app.include_router(vacation.router, prefix="/api/v1")
+app.include_router(auth.router, prefix="/api/v1")
 
 
 # ============================================================================
