@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Date, Time, Numeric, JSON, Boolean
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -59,6 +59,7 @@ class Staff(Base):
     specialty = relationship("Specialty", back_populates="staff_members")
     user = relationship("User", back_populates="staff_profile", uselist=False)
 
+
 class Salary(Base):
     __tablename__ = "salaries"
     id = Column(Integer, primary_key=True, index=True)
@@ -68,16 +69,30 @@ class Salary(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+# =========================================================================
+# VACATION — Updated with Diego's fields (feature/leave-vacation-request-staff)
+#
+# Fields added vs develop's original Vacation model:
+#   - request_date    : date the request was submitted (default = today)
+#   - rejection_reason: HR's reason when rejecting (nullable)
+#   - attachment_url  : optional file attachment URL
+#   - attachment_name : optional file attachment name
+#   - reason          : changed to nullable=False with default "vacation"
+#   - status          : normalized default to lowercase "pending"
+# =========================================================================
 class Vacation(Base):
     __tablename__ = "vacations"
-
     id = Column(Integer, primary_key=True, index=True)
-    staff_id = Column(Integer, ForeignKey("staff.id", ondelete="CASCADE"))
+    staff_id = Column(Integer, ForeignKey("staff.id", ondelete="CASCADE"), nullable=False)
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
-    status = Column(String(50), default='Pending')
-    reason = Column(String(255), nullable=True)
+    request_date = Column(Date, nullable=False, default=date.today)
+    reason = Column(String(255), nullable=False, default="vacation")
+    status = Column(String(20), nullable=False, default="pending")
     comment = Column(String(255), nullable=True)
+    rejection_reason = Column(String(255), nullable=True)
+    attachment_url = Column(String(255), nullable=True)
+    attachment_name = Column(String(255), nullable=True)
 
 
 class Schedule(Base):
@@ -224,9 +239,9 @@ class Tax(Base):
     tax_name = Column(String(50), nullable=False)
     tax_amount = Column(Numeric(10, 2), nullable=False)
 
+
 class VerificationCode(Base):
     __tablename__ = "verification_codes"
-
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), nullable=False)
     code = Column(String(10), nullable=False)
