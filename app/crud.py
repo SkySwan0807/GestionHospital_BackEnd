@@ -16,11 +16,21 @@ Imports from:
 """
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, or_
-
-
 from app.models import Staff, Department, Specialty, User
 from app.schemas import SpecialtyCreate, StaffSelfUpdate
+from sqlalchemy.orm import joinedload
 
+def get_staff_by_id(db: Session, staff_id: str | int) -> Staff | None:
+    return (
+        db.query(Staff)
+        .options(
+            joinedload(Staff.user),
+            joinedload(Staff.department),
+            joinedload(Staff.specialty)
+        )
+        .filter(Staff.id == staff_id)
+        .first()
+    )
 
 def get_all_specialties(db: Session) -> list[Specialty]:
     """
