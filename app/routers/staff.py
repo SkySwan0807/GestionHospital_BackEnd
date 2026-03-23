@@ -103,3 +103,41 @@ def update_profile_endpoint(
         specialty=updated_staff.specialty.name if updated_staff.specialty else None,
         created_at=updated_staff.created_at
     )
+
+def _to_staff_contact_out(staff) -> schemas.StaffContactOut:
+    return schemas.StaffContactOut(
+        id=staff.id,
+        first_name=staff.first_name,
+        last_name=staff.last_name,
+        email=staff.user.email if staff.user else "no-email@example.com",
+        phone_number=staff.phone_number,
+        role_level=staff.role_level,
+        status=staff.status,
+        profile_pic=staff.profile_pic,
+        department=staff.department.name if staff.department else None,
+        specialty=staff.specialty.name if staff.specialty else None,
+        created_at=staff.created_at
+    )
+
+@router.get(
+    "/{id}",
+    response_model=schemas.StaffContactOut,
+    status_code=status.HTTP_200_OK
+)
+def get_staff_by_id_endpoint(
+    id: str,
+    requester_role: str | None = None,
+    db: Session = Depends(get_db)
+):
+    if (requester_role or "").strip().lower() != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can access this resource"
+        )
+    staff = crud.get_staff_by_id(db, id)
+    if not staff:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    return _to_staff_contact_out(staff)
