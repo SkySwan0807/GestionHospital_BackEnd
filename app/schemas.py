@@ -14,7 +14,7 @@ Modules defined here:
                    VacationDetails, VacationBalanceCreate, VacationBalanceResponse
 """
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict, EmailStr
+from pydantic import BaseModel, Field, field_validator, ConfigDict, EmailStr, model_validator
 from typing import Optional
 from datetime import datetime, date
 
@@ -125,6 +125,78 @@ class StaffContactOut(BaseModel):
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
+class StaffCreate(BaseModel):
+    user_id: int
+    first_name: str
+    last_name: str
+    phone_number: Optional[str] = None
+    start_date: date
+    status: str
+    role_level: str
+    department_id: int
+    specialty_id: Optional[int] = None
+    profile_pic: Optional[str] = None
+    vacation_details: Optional[dict] = None
+
+class StaffUpdate(BaseModel):
+    first_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    last_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    phone_number: Optional[str] = None
+    status: Optional[str] = None
+    role_level: Optional[str] = None
+    department_id: Optional[int] = None
+    specialty_id: Optional[int] = None
+    profile_pic: Optional[str] = None
+
+class StaffResponse(BaseModel):
+    id: int
+    user_id: int
+    first_name: str
+    last_name: str
+    email: Optional[EmailStr] = None
+    phone_number: Optional[str]
+    start_date: date
+    status: str
+    role_level: str
+    department_id: int
+    specialty_id: Optional[int]
+    profile_pic: Optional[str]
+    vacation_details: Optional[dict]
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode='before')
+    @classmethod
+    def extract_email(cls, data):
+        """Extrae el email de la tabla Users automáticamente"""
+        if hasattr(data, 'user') and data.user:
+            data.email = data.user.email
+        return data
+# --- AGREGAR ESTO AL FINAL DE LA SECCIÓN STAFF ---
+
+class StaffCreate(BaseModel):
+    user_id: int = Field(..., description="ID del usuario en la tabla users")
+    first_name: str
+    last_name: str
+    phone_number: str | None = None
+    start_date: date
+    status: str = Field(default="Active")
+    role_level: str
+    department_id: int
+    specialty_id: int | None = None
+    profile_pic: str | None = None
+    vacation_details: dict | None = None
+
+class StaffUpdate(BaseModel):
+    first_name: str | None = Field(None, min_length=1, max_length=100)
+    last_name: str | None = Field(None, min_length=1, max_length=100)
+    phone_number: str | None = None
+    status: str | None = None
+    role_level: str | None = None
+    department_id: int | None = None
+    specialty_id: int | None = None
+    profile_pic: str | None = None
 
 # ============================================================================
 # VACATION MODULE

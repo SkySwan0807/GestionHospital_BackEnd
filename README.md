@@ -89,13 +89,13 @@ Las contrasenas en la base de datos estan protegidas mediante encriptacion *bcry
 Para realizar pruebas funcionales sin necesidad de registrar nuevos usuarios, se han habilitado cuentas precargadas. **Todas las cuentas utilizan la misma contrasena universal para pruebas: `1234`**.
 
 Cuentas de Personal (Roles: Staff / Human Resources):
-* Usuario: dra.suzeth@hospital.com | Contrasena: 1234
-* Usuario: cmendoza@hospital.com | Contrasena: 1234
-* Usuario: lvargas@hospital.com | Contrasena: 1234
+* Usuario: dr.mendoza@hospital.com | Contrasena: 1234
+* Usuario: admin.quispe@hospital.com | Contrasena: 1234
+* Usuario: dr.blanco@hospital.com | Contrasena: 1234
 
 Cuentas de Paciente (Rol: Patient):
-* Usuario: oscar.vargas@gmail.com | Contrasena: 1234
-* Usuario: juanperez@mail.com | Contrasena: 1234
+* Usuario: p.espinoza@pacientes.hospital.com | Contrasena: 1234
+* Usuario: p.duran@pacientes.hospital.com | Contrasena: 1234
 
 ### 8.1. Endpoints de Acceso y Onboarding
 

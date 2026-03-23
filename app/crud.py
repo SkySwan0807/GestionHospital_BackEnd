@@ -19,6 +19,7 @@ from sqlalchemy import func, or_
 from app.models import Staff, Department, Specialty, User
 from app.schemas import SpecialtyCreate, StaffSelfUpdate
 from sqlalchemy.orm import joinedload
+from fastapi import HTTPException, status
 
 def get_staff_by_id(db: Session, staff_id: str | int) -> Staff | None:
     return (
@@ -186,3 +187,43 @@ def update_staff_contact_info(db: Session, update_data: StaffSelfUpdate):
     db.commit()
     db.refresh(db_staff)
     return db_staff
+
+
+def create_staff(db: Session, staff_data: "schemas.StaffCreate") -> Staff:
+    # 1. Validar que el usuario exista
+    user = db.query(User).filter(User.id == staff_data.user_id).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="El usuario especificado no existe en la BD")
+
+    # 2. Validar que no tenga perfil duplicado
+    existing = db.query(Staff).filter(Staff.user_id == staff_data.user_id).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Este usuario ya tiene un perfil de staff")
+
+    # 3. Crear el registro
+    db_staff = Staff(**staff_data.model_dump())
+    db.add(db_staff)
+    db.commit()
+    db.refresh(db_staff)
+
+    # Cargar relaciones para que _to_staff_contact_out no falle
+    return db.query(Staff).options(
+        joinedload(Staff.user), joinedload(Staff.department), joinedload(Staff.specialty)
+    ).filter(Staff.id == db_staff.id).first()
+
+
+def update_staff_admin(db: Session, staff_id: int, staff_update: "schemas.StaffUpdate") -> Staff:
+    staff = db.query(Staff).options(
+        joinedload(Staff.user), joinedload(Staff.department), joinedload(Staff.specialty)
+    ).filter(Staff.id == staff_id).first()
+
+    if not staff:
+        raise HTTPException(status_code=404, detail="Staff no encontrado")
+
+    update_data = staff_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(staff, key, value)
+
+    db.commit()
+    db.refresh(staff)
+    return staff

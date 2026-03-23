@@ -104,6 +104,9 @@ def update_profile_endpoint(
         created_at=updated_staff.created_at
     )
 
+# =====================================================================
+# HELPER (Funciones de Apoyo)
+# =====================================================================
 def _to_staff_contact_out(staff) -> schemas.StaffContactOut:
     return schemas.StaffContactOut(
         id=staff.id,
@@ -119,6 +122,9 @@ def _to_staff_contact_out(staff) -> schemas.StaffContactOut:
         created_at=staff.created_at
     )
 
+# =====================================================================
+# GET /staff/{id}
+# =====================================================================
 @router.get(
     "/{id}",
     response_model=schemas.StaffContactOut,
@@ -141,3 +147,37 @@ def get_staff_by_id_endpoint(
             detail="User not found"
         )
     return _to_staff_contact_out(staff)
+
+# =====================================================================
+# NUEVO: POST /staff/ (CREAR STAFF)
+# =====================================================================
+@router.post(
+    "/",
+    response_model=schemas.StaffContactOut,
+    status_code=status.HTTP_201_CREATED
+)
+def create_staff_endpoint(
+    staff: schemas.StaffCreate,
+    db: Session = Depends(get_db)
+):
+    """Crea un nuevo perfil de empleado (Requiere un user_id existente)."""
+    new_staff = crud.create_staff(db, staff)
+    # Utilizamos el helper de tu equipo para devolverlo bonito
+    return _to_staff_contact_out(new_staff)
+
+# =====================================================================
+# NUEVO: PATCH /staff/{id}/admin (ACTUALIZAR ADMIN)
+# =====================================================================
+@router.patch(
+    "/{id}/admin",
+    response_model=schemas.StaffContactOut,
+    status_code=status.HTTP_200_OK
+)
+def update_staff_admin_endpoint(
+    id: int,
+    staff_update: schemas.StaffUpdate,
+    db: Session = Depends(get_db)
+):
+    """Actualiza cualquier dato administrativo del empleado (Para uso de RRHH)."""
+    updated_staff = crud.update_staff_admin(db, id, staff_update)
+    return _to_staff_contact_out(updated_staff)
